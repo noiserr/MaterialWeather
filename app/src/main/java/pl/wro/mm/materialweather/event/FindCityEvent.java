@@ -1,7 +1,6 @@
 package pl.wro.mm.materialweather.event;
 
 import pl.wro.mm.materialweather.model.MainWeather;
-import pl.wro.mm.materialweather.weather.Weather;
 
 /**
  * Created by noiser on 06.06.15.

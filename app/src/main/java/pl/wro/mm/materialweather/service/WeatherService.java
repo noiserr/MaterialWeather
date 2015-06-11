@@ -5,7 +5,7 @@ import android.util.Log;
 import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.event.FindCityEvent;
 import pl.wro.mm.materialweather.model.MainWeather;
-import pl.wro.mm.materialweather.weather.Weather;
+import pl.wro.mm.materialweather.weatherGson.Weather;
 import retrofit.Callback;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
@@ -18,19 +18,19 @@ import retrofit.http.Query;
  */
 public class WeatherService {
 
-    private  WeatherServiceInterface service;
+    private WeatherServiceInterface service;
     private Weather currentWeather;
+
     public WeatherService() {
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint("http://api.openweathermap.org")
                 .build();
-         service = restAdapter.create(WeatherServiceInterface.class);
-
+        service = restAdapter.create(WeatherServiceInterface.class);
 
 
     }
 
-        public void findCity(final String cityName, String units){
+    public void findCity(final String cityName, String units) {
         service.findCity(cityName, units, new Callback<Weather>() {
             @Override
             public void success(Weather weather, Response response) {
@@ -41,6 +41,7 @@ public class WeatherService {
                     EventBus.getDefault().post(new FindCityEvent(true, cityName, mainWeather));
                 }
             }
+
             @Override
             public void failure(RetrofitError error) {
                 EventBus.getDefault().post(new FindCityEvent(false, cityName, null));
@@ -54,9 +55,9 @@ public class WeatherService {
         service.findCityGPS(lat, lon, new Callback<Weather>() {
             @Override
             public void success(Weather weather, Response response) {
-                if (weather.getCod() == 404){
+                if (weather.getCod() == 404) {
                     EventBus.getDefault().post(new FindCityEvent(false, null, null));
-                }else {
+                } else {
                     String cityName = weather.getName();
                     MainWeather mainWeather = parseWeather(weather);
                     EventBus.getDefault().post(new FindCityEvent(true, cityName, mainWeather));
@@ -70,7 +71,6 @@ public class WeatherService {
                 EventBus.getDefault().post(new FindCityEvent(false, null, null));
 
 
-
             }
         });
 //        Log.d("GPS", "Jestem TU!");
@@ -80,10 +80,10 @@ public class WeatherService {
     public interface WeatherServiceInterface {
 
         @GET("/data/2.5/weather?units=metric")
-        void findCity(@Query("q") String q,@Query("units") String units ,Callback<Weather> cb);
+        void findCity(@Query("q") String q, @Query("units") String units, Callback<Weather> cb);
 
         @GET("/data/2.5/weather?units=metric")
-        void findCityGPS(@Query("lat") Double lat,@Query("lon") Double lon ,Callback<Weather> cb);
+        void findCityGPS(@Query("lat") Double lat, @Query("lon") Double lon, Callback<Weather> cb);
 
 
     }
@@ -95,6 +95,7 @@ public class WeatherService {
         mainWeather.setConditionID(weather.getWeather().get(0).getId());
         mainWeather.setDescription(weather.getWeather().get(0).getMain());
         mainWeather.setPressure(weather.getMain().getPressure() + " hPa");
+        mainWeather.setCityID(weather.getId());
         return mainWeather;
     }
 

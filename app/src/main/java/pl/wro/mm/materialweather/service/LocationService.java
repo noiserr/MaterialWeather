@@ -111,7 +111,7 @@ public class LocationService implements LocationListener {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
+        locationManager.removeUpdates(this);
         return location;
     }
 }

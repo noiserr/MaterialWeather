@@ -1,5 +1,5 @@
 
-package pl.wro.mm.materialweather.weather;
+package pl.wro.mm.materialweather.weatherGson;
 
 import java.util.ArrayList;
 import java.util.List;

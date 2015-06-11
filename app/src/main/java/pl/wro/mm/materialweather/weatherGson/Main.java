@@ -1,5 +1,5 @@
 
-package pl.wro.mm.materialweather.weather;
+package pl.wro.mm.materialweather.weatherGson;
 
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;

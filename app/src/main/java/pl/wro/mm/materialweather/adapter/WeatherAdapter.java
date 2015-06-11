@@ -1,10 +1,9 @@
 package pl.wro.mm.materialweather.adapter;
 
-import android.support.design.widget.SwipeDismissBehavior;
+import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -14,16 +13,19 @@ import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
+import de.greenrobot.event.EventBus;
+import pl.wro.mm.materialweather.DetailActivity;
 import pl.wro.mm.materialweather.R;
+import pl.wro.mm.materialweather.event.ShowDetailsEvent;
 import pl.wro.mm.materialweather.model.MainWeather;
-import pl.wro.mm.materialweather.weather.Weather;
+import pl.wro.mm.materialweather.service.ForecastService;
 
 /**
  * Created by noiser on 06.06.15.
  */
 public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherViewHolder> {
 
-    List<MainWeather> weatherList;
+    public List<MainWeather> weatherList;
 
 
     public WeatherAdapter(List<MainWeather> weatherList) {
@@ -92,7 +94,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
         return weatherList.size();
     }
 
-    public static class WeatherViewHolder extends RecyclerView.ViewHolder{
+    public class WeatherViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         @InjectView(R.id.pressure)
         TextView pressure;
@@ -108,10 +110,21 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
         public WeatherViewHolder(View itemView) {
             super(itemView);
             ButterKnife.inject(this, itemView);
+            itemView.setOnClickListener(this);
+
 
         }
 
 
+        @Override
+        public void onClick(View v) {
+//            ForecastService forecastService = new ForecastService();
+//            forecastService.getForecast(2643743);
+//            Log.d("TAGG",weatherList.get(getAdapterPosition()).getCityID()+"");
+            EventBus.getDefault().post(new ShowDetailsEvent());
+
+
+        }
     }
 
 }

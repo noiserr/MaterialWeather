@@ -1,15 +1,14 @@
 package pl.wro.mm.materialweather;
 
-import android.content.Context;
 import android.content.Intent;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationManager;
-import android.provider.Settings;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -23,14 +22,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.Toast;
 
-import com.activeandroid.ActiveAndroid;
 import com.activeandroid.query.Select;
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,28 +34,28 @@ import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.adapter.WeatherAdapter;
 import pl.wro.mm.materialweather.event.FindCityEvent;
+import pl.wro.mm.materialweather.event.ShowDetailsEvent;
 import pl.wro.mm.materialweather.model.MainWeather;
 import pl.wro.mm.materialweather.service.LocationService;
-import pl.wro.mm.materialweather.service.PhotoService;
 import pl.wro.mm.materialweather.service.WeatherService;
-import pl.wro.mm.materialweather.weather.Weather;
 
 
 public class MainActivity extends AppCompatActivity {
     @InjectView(R.id.drawer_layout)
     DrawerLayout mDrawerLayout;
-
     @InjectView(R.id.cities_list)
     RecyclerView recyclerView;
+    @InjectView(R.id.activity_main_swipe_refresh_layout)
+    SwipeRefreshLayout swipeRefreshLayout;
 
     ActionBar actionBar;
+
     List<MainWeather> weatherList = new ArrayList<>();
     WeatherService weatherService;
     WeatherAdapter weatherAdapter;
     AlertDialog alert;
-
+    SwipeableRecyclerViewTouchListener swipeTouchListener;
     LocationService locationService = new LocationService(this);
-
 
 
     @Override
@@ -84,58 +78,32 @@ public class MainActivity extends AppCompatActivity {
         }
 
         setupRecyclerview();
+        setupSwipeableTouchListener();
         weatherService = new WeatherService();
 
-        SwipeableRecyclerViewTouchListener swipeTouchListener =
-                new SwipeableRecyclerViewTouchListener(recyclerView,
-                        new SwipeableRecyclerViewTouchListener.SwipeListener() {
-                            @Override
-                            public boolean canSwipe(int position) {
-                                return true;
-                            }
-
-                            @Override
-                            public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
-//                                for (int position : reverseSortedPositions) {
-//                                    weatherList.remove(position);
-//                                    weatherAdapter.notifyItemRemoved(position);
-//                                }
-//                                weatherAdapter.notifyDataSetChanged();
-                                Log.d("SWIPE", "LEFT");
-                            }
-
-                            @Override
-                            public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                                for (int position : reverseSortedPositions) {
-                                    weatherList.get(position).delete();
-                                    weatherList.remove(position);
-                                    weatherAdapter.notifyItemRemoved(position);
-                                }
-//                                weatherAdapter.notifyDataSetChanged();
-                                Log.d("SWIPE", "RIGHT");
-
-                            }
-                        });
 
         recyclerView.addOnItemTouchListener(swipeTouchListener);
 
+        swipeRefreshLayout.setColorSchemeColors(R.attr.colorAccent, R.attr.colorPrimary);
 
-//        ImageView imageView = (ImageView) findViewById(R.id.web_image);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                    }
+                }, 2000);
+            }
+        });
 
-
-//
-//        MainWeather mainWeather = new MainWeather();
-//        mainWeather.setCityName("GUNOW");
-//        mainWeather.setPressure("1000 hPa");
-//        mainWeather.setTemp("45");
-//        mainWeather.setDescription("jebie guwnem");
-//
-//        mainWeather.save();
 
         List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
 //
 
     }
+
 
     @Override
     protected void onResume() {
@@ -143,6 +111,7 @@ public class MainActivity extends AppCompatActivity {
         Log.d("TAG", "REASUMUJĄĆ");
         List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
         weatherList.addAll(mainWeatherList);
+
     }
 
     private void setupRecyclerview() {
@@ -194,6 +163,68 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public void onEvent(ShowDetailsEvent event) {
+        Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+        startActivity(intent);
+
+    }
+
+    private void setupSwipeableTouchListener() {
+
+         swipeTouchListener = new SwipeableRecyclerViewTouchListener(recyclerView,
+                        new SwipeableRecyclerViewTouchListener.SwipeListener() {
+                            @Override
+                            public boolean canSwipe(int position) {
+                                return true;
+                            }
+
+                            @Override
+                            public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                                for (final int position : reverseSortedPositions) {
+                                    removeCity(position);
+                                }
+                            }
+
+                            @Override
+                            public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                                for (final int position : reverseSortedPositions) {
+                                   removeCity(position);
+                                }
+                            }
+                        });
+
+    }
+
+    private void removeCity(final int position) {
+        final MainWeather weather = weatherAdapter.weatherList.get(position);
+        final MainWeather copy = new MainWeather(weather);
+        String information;
+        weatherAdapter.weatherList.remove(position);
+        weatherAdapter.notifyDataSetChanged();
+        information = weather.getCityName();
+        weather.delete();
+
+        Log.d("LISTT", new Select().from(MainWeather.class).execute().size() + "");
+
+        Snackbar.make(recyclerView, information + " removed", Snackbar.LENGTH_LONG)
+                .setAction("UNDO", new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        copy.save();
+                        weatherAdapter.weatherList.add(position, copy);
+                        weatherAdapter.notifyItemInserted(position);
+                        Log.d("LISTT", weather.getCityName());
+                        Log.d("LISTT", new Select().from(MainWeather.class).execute().size() + "");
+
+
+                    }
+                }).show();
+    }
+
+    private void undoRemoveCity() {
+
+    }
+
     public void addCity(View view) {
         showInputDialog(view);
 
@@ -214,8 +245,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 weatherService.findCity(findCityET.getText() + "", "metric");
-//                PhotoService photoService = new PhotoService();
-//                photoService.findPhoto(findCityTV.getText() + "");
+
 
             }
         });

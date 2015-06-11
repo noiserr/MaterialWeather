@@ -21,6 +21,21 @@ public class MainWeather extends Model {
     String pressure;
     @Column(name = "conditionid")
     int conditionID;
+    @Column(name = "cityID")
+    int cityID;
+
+    public MainWeather( ) {
+
+    }
+
+    public MainWeather(MainWeather mainWeather) {
+        this.description = mainWeather.description;
+        this.cityName = mainWeather.cityName;
+        this.temp = mainWeather.temp;
+        this.pressure = mainWeather.pressure;
+        this.conditionID = mainWeather.conditionID;
+
+    }
 
     public String getDescription() {
         return description;
@@ -60,5 +75,13 @@ public class MainWeather extends Model {
 
     public void setConditionID(int conditionID) {
         this.conditionID = conditionID;
+    }
+
+    public int getCityID() {
+        return cityID;
+    }
+
+    public void setCityID(int cityID) {
+        this.cityID = cityID;
     }
 }
