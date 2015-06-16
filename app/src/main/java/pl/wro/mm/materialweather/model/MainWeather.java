@@ -21,7 +21,7 @@ public class MainWeather extends Model {
     String pressure;
     @Column(name = "conditionid")
     int conditionID;
-    @Column(name = "cityID")
+    @Column(name = "city_id")
     int cityID;
 
     public MainWeather( ) {
@@ -34,6 +34,7 @@ public class MainWeather extends Model {
         this.temp = mainWeather.temp;
         this.pressure = mainWeather.pressure;
         this.conditionID = mainWeather.conditionID;
+        this.cityID = mainWeather.cityID;
 
     }
 

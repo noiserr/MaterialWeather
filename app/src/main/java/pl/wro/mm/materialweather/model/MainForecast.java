@@ -19,9 +19,22 @@ public class MainForecast extends Model {
     @Column(name = "city_name")
     String cityName;
     @Column(name = "min_temp")
-    String minTemperature;
+    String dayTemperature;
     @Column(name = "max_temp")
-    String maxTemperature;
+    String nightTemperature;
+    @Column(name = "day_of_week")
+    String dayOfWeek;
+    @Column(name = "hum")
+    String humidity;
+    @Column(name = "cloudiness")
+    String cludiness;
+    @Column(name = "rain")
+    String rainVolume;
+    @Column(name = "pressure")
+    String pressure;
+    @Column(name = "wind_speed")
+    String windSpeed;
+
 
     public long getDate() {
         return date;
@@ -55,19 +68,67 @@ public class MainForecast extends Model {
         this.cityName = cityName;
     }
 
-    public String getMinTemperature() {
-        return minTemperature;
+    public String getDayTemperature() {
+        return dayTemperature;
     }
 
-    public void setMinTemperature(String minTemperature) {
-        this.minTemperature = minTemperature;
+    public void setDayTemperature(String dayTemperature) {
+        this.dayTemperature = dayTemperature;
     }
 
-    public String getMaxTemperature() {
-        return maxTemperature;
+    public String getNightTemperature() {
+        return nightTemperature;
     }
 
-    public void setMaxTemperature(String maxTemperature) {
-        this.maxTemperature = maxTemperature;
+    public void setNightTemperature(String nightTemperature) {
+        this.nightTemperature = nightTemperature;
+    }
+
+    public String getDayOfWeek() {
+        return dayOfWeek;
+    }
+
+    public void setDayOfWeek(String dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
+
+    public String getHumidity() {
+        return humidity;
+    }
+
+    public void setHumidity(String humidity) {
+        this.humidity = humidity;
+    }
+
+    public String getCludiness() {
+        return cludiness;
+    }
+
+    public void setCludiness(String cludiness) {
+        this.cludiness = cludiness;
+    }
+
+    public String getRainVolume() {
+        return rainVolume;
+    }
+
+    public void setRainVolume(String rainVolume) {
+        this.rainVolume = rainVolume;
+    }
+
+    public String getPressure() {
+        return pressure;
+    }
+
+    public void setPressure(String pressure) {
+        this.pressure = pressure;
+    }
+
+    public String getWindSpeed() {
+        return windSpeed;
+    }
+
+    public void setWindSpeed(String windSpeed) {
+        this.windSpeed = windSpeed;
     }
 }

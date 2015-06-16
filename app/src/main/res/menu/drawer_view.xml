@@ -12,7 +12,6 @@
             android:title="Messages" />
         <item
             android:id="@+id/nav_friends"
-
             android:title="Friends" />
         <item
             android:id="@+id/nav_discussion"

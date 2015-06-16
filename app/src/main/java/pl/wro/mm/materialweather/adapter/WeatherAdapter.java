@@ -94,6 +94,17 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
         return weatherList.size();
     }
 
+    public boolean isOnCityList(String name) {
+        boolean result = false;
+        for (MainWeather mainWeather : weatherList) {
+            Log.d("TAGG", name + " - " +mainWeather.getCityName());
+            if (mainWeather.getCityName().equals(name)) {
+                result = true;
+
+            }
+        }
+        return result;
+    }
     public class WeatherViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
 
         @InjectView(R.id.pressure)
@@ -116,12 +127,13 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
         }
 
 
+
+
         @Override
         public void onClick(View v) {
-//            ForecastService forecastService = new ForecastService();
-//            forecastService.getForecast(2643743);
-//            Log.d("TAGG",weatherList.get(getAdapterPosition()).getCityID()+"");
-            EventBus.getDefault().post(new ShowDetailsEvent());
+            Log.d("TAGG", weatherList.get(getAdapterPosition()).getCityID()+"");
+            EventBus.getDefault().post(new ShowDetailsEvent(weatherList.get(getAdapterPosition()).getCityName(),
+                    weatherList.get(getAdapterPosition()).getCityID()+""));
 
 
         }

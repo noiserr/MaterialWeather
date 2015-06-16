@@ -39,6 +39,8 @@ public class WeatherService {
                     EventBus.getDefault().post(new FindCityEvent(false, cityName, null));
                 } else {
                     EventBus.getDefault().post(new FindCityEvent(true, cityName, mainWeather));
+//                    ForecastService forecastService = new ForecastService();
+//                    forecastService.getForecast(mainWeather.getCityID());
                 }
             }
 
@@ -61,7 +63,7 @@ public class WeatherService {
                     String cityName = weather.getName();
                     MainWeather mainWeather = parseWeather(weather);
                     EventBus.getDefault().post(new FindCityEvent(true, cityName, mainWeather));
-                    parseWeather(weather);
+
                 }
                 Log.d("GPS", weather.getName());
             }

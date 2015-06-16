@@ -2,7 +2,10 @@ package pl.wro.mm.materialweather.service;
 
 import android.util.Log;
 
-import java.util.ArrayList;
+import java.text.DateFormatSymbols;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
 
 import pl.wro.mm.materialweather.forecastGson.Forecast;
 import pl.wro.mm.materialweather.forecastGson.ForecastList;
@@ -34,27 +37,11 @@ public class ForecastService {
         service.getForecast(cityId, new Callback<Forecast>() {
             @Override
             public void success(Forecast forecast, Response response) {
-                java.util.List<ForecastList> forecastList = forecast.getList();
                 Log.d("TAGG", response.getUrl());
-                for (ForecastList oneForecast : forecastList) {
-                    MainForecast mainForecast = new MainForecast();
-                    mainForecast.setDate(oneForecast.getDt());
-                    mainForecast.setCityName(forecast.getCity().getName());
-                    mainForecast.setConditionId(oneForecast.getWeather().get(0).getId());
-                    mainForecast.setMinTemperature(oneForecast.getTemp().getMin() + "");
-                    mainForecast.setMaxTemperature(oneForecast.getTemp().getMax() + "");
-                    Log.d("TAGG",
-                            "Condition: " + mainForecast.getConditionId() +
-                                    " Cityname: " + mainForecast.getCityName() +
-                                    " CityID: " + mainForecast.getCityId() +
-                                    " Date: " + new java.util.Date((long) mainForecast.getDate() * 1000) +
-                                    " Min: " + mainForecast.getMinTemperature() +
-                                    " Max: " + mainForecast.getMaxTemperature());
-
-                }
-
+                parseAndSaveForecast(forecast);
 
             }
+
 
             @Override
             public void failure(RetrofitError error) {
@@ -63,6 +50,39 @@ public class ForecastService {
         });
 
     }
+
+    private void parseAndSaveForecast(Forecast forecast) {
+        java.util.List<ForecastList> forecastList = forecast.getList();
+        for (ForecastList oneForecast : forecastList) {
+
+            MainForecast mainForecast = new MainForecast();
+            mainForecast.setCityName(forecast.getCity().getName());
+            mainForecast.setCityId(forecast.getCity().getId());
+
+            mainForecast.setDate(oneForecast.getDt());
+            mainForecast.setConditionId(oneForecast.getWeather().get(0).getId());
+            mainForecast.setDayTemperature(oneForecast.getTemp().getDay() + "");
+            mainForecast.setNightTemperature(oneForecast.getTemp().getNight() + "");
+            mainForecast.setDayOfWeek(getDayOfWeek(oneForecast.getDt()));
+            mainForecast.setCludiness(oneForecast.getClouds()+"");
+            mainForecast.setRainVolume(oneForecast.getRain()+"");
+            mainForecast.setWindSpeed(oneForecast.getSpeed()+"");
+            mainForecast.setHumidity(oneForecast.getHumidity()+"");
+            mainForecast.setPressure(oneForecast.getPressure()+"");
+            mainForecast.save();
+        }
+    }
+
+    private String getDayOfWeek(long dt) {
+        Date date = new Date(dt * 1000);
+        Calendar c = Calendar.getInstance();
+        c.setTime(date);
+        int day = c.get(Calendar.DAY_OF_WEEK);
+        DateFormatSymbols symbols = new DateFormatSymbols(new Locale("en"));
+        String[] dayNames = symbols.getShortWeekdays();
+        return dayNames[day];
+    }
+
 
     public interface ForecastServiceInterface {
 

@@ -38,7 +38,7 @@ public class PhotoService {
             String gett;
             @Override
             public void success(Photo photo, Response response) {
-                Log.d("TAGG", response.getUrl());
+//                Log.d("TAGG", response.getUrl());
                 Photo_ cityPhoto = photo.getPhotos().getPhoto().get(0);
                 String url = "https://farm" + cityPhoto.getFarm() + ".staticflickr.com/" + cityPhoto.getServer() + "/" + cityPhoto.getId() + "_" + cityPhoto.getSecret() + "_z.jpg";
 

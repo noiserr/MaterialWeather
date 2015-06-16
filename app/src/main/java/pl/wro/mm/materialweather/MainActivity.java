@@ -3,6 +3,7 @@ package pl.wro.mm.materialweather;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Handler;
+import android.support.design.widget.AppBarLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
@@ -22,11 +23,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import com.activeandroid.query.Delete;
 import com.activeandroid.query.Select;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import butterknife.ButterKnife;
@@ -35,19 +39,29 @@ import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.adapter.WeatherAdapter;
 import pl.wro.mm.materialweather.event.FindCityEvent;
 import pl.wro.mm.materialweather.event.ShowDetailsEvent;
+import pl.wro.mm.materialweather.model.MainForecast;
 import pl.wro.mm.materialweather.model.MainWeather;
+import pl.wro.mm.materialweather.service.ForecastService;
 import pl.wro.mm.materialweather.service.LocationService;
 import pl.wro.mm.materialweather.service.WeatherService;
 
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOffsetChangedListener {
     @InjectView(R.id.drawer_layout)
     DrawerLayout mDrawerLayout;
     @InjectView(R.id.cities_list)
     RecyclerView recyclerView;
     @InjectView(R.id.activity_main_swipe_refresh_layout)
     SwipeRefreshLayout swipeRefreshLayout;
-
+    @InjectView(R.id.appbar)
+    AppBarLayout appBarLayout;
+    @InjectView(R.id.toolbar)
+    Toolbar toolbar;
+    View promptView;
+    FloatingActionButton findCityButton;
+    ProgressBar progressBarSearch;
+    FloatingActionButton findCityGPSButton;
+    ProgressBar progressBarGps;
     ActionBar actionBar;
 
     List<MainWeather> weatherList = new ArrayList<>();
@@ -86,6 +100,7 @@ public class MainActivity extends AppCompatActivity {
 
         swipeRefreshLayout.setColorSchemeColors(R.attr.colorAccent, R.attr.colorPrimary);
 
+
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -93,8 +108,12 @@ public class MainActivity extends AppCompatActivity {
                 handler.postDelayed(new Runnable() {
                     public void run() {
                         swipeRefreshLayout.setRefreshing(false);
+                        Log.d("TAGG", "Before: " + new Select().from(MainForecast.class).execute().size() + "");
+
+                        new Delete().from(MainForecast.class).execute();
+                        Log.d("TAGG", "After: " + new Select().from(MainForecast.class).execute().size() + "");
                     }
-                }, 2000);
+                }, 4000);
             }
         });
 
@@ -108,9 +127,21 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d("TAG", "REASUMUJĄĆ");
-        List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
-        weatherList.addAll(mainWeatherList);
+        appBarLayout.addOnOffsetChangedListener(this);
+        if (weatherList.isEmpty()) {
+            List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
+            weatherList.addAll(mainWeatherList);
+            weatherAdapter.notifyDataSetChanged();
+        }
+
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        appBarLayout.removeOnOffsetChangedListener(this);
+//        weatherList = Collections.emptyList();
 
     }
 
@@ -146,52 +177,68 @@ public class MainActivity extends AppCompatActivity {
             case android.R.id.home:
                 mDrawerLayout.openDrawer(GravityCompat.START);
                 return true;
+            case R.id.nav_friends:
+                Log.d("TAG", "friends clicked");
+                return true;
         }
         return super.onOptionsItemSelected(item);
     }
 
 
     public void onEvent(FindCityEvent event) {
+        progressBarSearch.setVisibility(View.GONE);
+        progressBarGps.setVisibility(View.GONE);
+        findCityButton.setEnabled(true);
+        findCityGPSButton.setEnabled(true);
         if (event.isFound) {
-            alert.dismiss();
-            weatherList.add(event.weather);
-            event.weather.save();
-            recyclerView.smoothScrollToPosition(weatherList.size() - 1);
-            weatherAdapter.notifyItemInserted(weatherList.size() - 1);
+            if (weatherAdapter.isOnCityList(event.weather.getCityName())) {
+                Toast.makeText(getApplicationContext(), "City already on list", Toast.LENGTH_SHORT).show();
+
+            } else {
+                ForecastService forecastService = new ForecastService();
+                forecastService.getForecast(event.weather.getCityID());
+                alert.dismiss();
+                weatherList.add(event.weather);
+                event.weather.save();
+                recyclerView.smoothScrollToPosition(weatherList.size() - 1);
+                weatherAdapter.notifyItemInserted(weatherList.size() - 1);
+            }
         } else {
-            Toast.makeText(getApplicationContext(), "Can't find city!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), "Can't find city", Toast.LENGTH_SHORT).show();
         }
     }
 
     public void onEvent(ShowDetailsEvent event) {
         Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
+        intent.putExtra("CITY_NAME", event.getCityName());
+        intent.putExtra("CITY_ID", event.getCityId());
         startActivity(intent);
 
     }
 
     private void setupSwipeableTouchListener() {
 
-         swipeTouchListener = new SwipeableRecyclerViewTouchListener(recyclerView,
-                        new SwipeableRecyclerViewTouchListener.SwipeListener() {
-                            @Override
-                            public boolean canSwipe(int position) {
-                                return true;
-                            }
+        swipeTouchListener = new SwipeableRecyclerViewTouchListener(recyclerView,
+                new SwipeableRecyclerViewTouchListener.SwipeListener() {
+                    @Override
+                    public boolean canSwipe(int position) {
+                        return true;
+                    }
 
-                            @Override
-                            public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                                for (final int position : reverseSortedPositions) {
-                                    removeCity(position);
-                                }
-                            }
+                    @Override
+                    public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                        for (final int position : reverseSortedPositions) {
+                            removeCity(position);
+                        }
+                    }
 
-                            @Override
-                            public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
-                                for (final int position : reverseSortedPositions) {
-                                   removeCity(position);
-                                }
-                            }
-                        });
+                    @Override
+                    public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
+                        for (final int position : reverseSortedPositions) {
+                            removeCity(position);
+                        }
+                    }
+                });
 
     }
 
@@ -204,8 +251,6 @@ public class MainActivity extends AppCompatActivity {
         information = weather.getCityName();
         weather.delete();
 
-        Log.d("LISTT", new Select().from(MainWeather.class).execute().size() + "");
-
         Snackbar.make(recyclerView, information + " removed", Snackbar.LENGTH_LONG)
                 .setAction("UNDO", new View.OnClickListener() {
                     @Override
@@ -213,30 +258,24 @@ public class MainActivity extends AppCompatActivity {
                         copy.save();
                         weatherAdapter.weatherList.add(position, copy);
                         weatherAdapter.notifyItemInserted(position);
-                        Log.d("LISTT", weather.getCityName());
-                        Log.d("LISTT", new Select().from(MainWeather.class).execute().size() + "");
-
-
                     }
                 }).show();
     }
 
-    private void undoRemoveCity() {
-
-    }
-
     public void addCity(View view) {
         showInputDialog(view);
-
     }
 
     private void showInputDialog(final View view) {
 
         LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
-        final View promptView = layoutInflater.inflate(R.layout.findcity_dialog, null);
+        promptView = layoutInflater.inflate(R.layout.findcity_dialog, null);
         final EditText findCityET = (EditText) promptView.findViewById(R.id.city_name_edit_text);
-        final FloatingActionButton findCityButton = (FloatingActionButton) promptView.findViewById(R.id.find_city_fab);
-        final FloatingActionButton findCityGPSButton = (FloatingActionButton) promptView.findViewById(R.id.gps_city_fab);
+        findCityButton = (FloatingActionButton) promptView.findViewById(R.id.find_city_fab);
+        findCityGPSButton = (FloatingActionButton) promptView.findViewById(R.id.gps_city_fab);
+        progressBarGps = (ProgressBar) promptView.findViewById(R.id.progressBar_gps);
+        progressBarSearch = (ProgressBar) promptView.findViewById(R.id.progressBar_search);
+
 
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
         alertDialogBuilder.setView(promptView);
@@ -244,8 +283,15 @@ public class MainActivity extends AppCompatActivity {
         findCityButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                weatherService.findCity(findCityET.getText() + "", "metric");
+                if (!findCityET.getText().toString().equals("")) {
+                    findCityButton.setEnabled(false);
+                    findCityGPSButton.setEnabled(false);
+                    progressBarSearch.setVisibility(View.VISIBLE);
+                    weatherService.findCity(findCityET.getText() + "", "metric");
+                } else {
+                    Toast.makeText(getApplicationContext(), "Type city name", Toast.LENGTH_SHORT).show();
 
+                }
 
             }
         });
@@ -254,14 +300,14 @@ public class MainActivity extends AppCompatActivity {
         findCityGPSButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 Location location = locationService.getLocation();
                 if (location != null) {
                     weatherService.findCityGPS(location.getLatitude(), location.getLongitude());
-
+                    findCityGPSButton.setEnabled(false);
+                    findCityButton.setEnabled(false);
+                    progressBarGps.setVisibility(View.VISIBLE);
                 } else {
-                    Toast.makeText(getApplicationContext(), "Can't get position!", Toast.LENGTH_SHORT).show();
-
+                    Toast.makeText(getApplicationContext(), "Can't get position! Is GPS on?", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -275,4 +321,14 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onOffsetChanged(AppBarLayout appBarLayout, int i) {
+
+        if (i == 0) {
+            swipeRefreshLayout.setEnabled(true);
+        } else {
+            swipeRefreshLayout.setEnabled(false);
+        }
+
+    }
 }
