@@ -25,10 +25,10 @@
 
         <meta-data
             android:name="AA_DB_NAME"
-            android:value="Weather2.db" />
+            android:value="Weather6.db" />
         <meta-data
             android:name="AA_DB_VERSION"
-            android:value="3" />
+            android:value="6" />
 
         <activity
             android:name=".DetailActivity"

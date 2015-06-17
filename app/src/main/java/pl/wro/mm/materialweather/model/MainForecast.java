@@ -34,6 +34,8 @@ public class MainForecast extends Model {
     String pressure;
     @Column(name = "wind_speed")
     String windSpeed;
+    @Column(name = "description")
+    String description;
 
 
     public long getDate() {
@@ -130,5 +132,13 @@ public class MainForecast extends Model {
 
     public void setWindSpeed(String windSpeed) {
         this.windSpeed = windSpeed;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 }

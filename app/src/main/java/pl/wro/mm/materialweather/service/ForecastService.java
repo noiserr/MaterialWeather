@@ -61,14 +61,15 @@ public class ForecastService {
 
             mainForecast.setDate(oneForecast.getDt());
             mainForecast.setConditionId(oneForecast.getWeather().get(0).getId());
-            mainForecast.setDayTemperature(oneForecast.getTemp().getDay() + "");
-            mainForecast.setNightTemperature(oneForecast.getTemp().getNight() + "");
+            mainForecast.setDayTemperature(oneForecast.getTemp().getDay().intValue() + "");
+            mainForecast.setNightTemperature(oneForecast.getTemp().getNight().intValue() + "");
             mainForecast.setDayOfWeek(getDayOfWeek(oneForecast.getDt()));
             mainForecast.setCludiness(oneForecast.getClouds()+"");
             mainForecast.setRainVolume(oneForecast.getRain()+"");
             mainForecast.setWindSpeed(oneForecast.getSpeed()+"");
             mainForecast.setHumidity(oneForecast.getHumidity()+"");
             mainForecast.setPressure(oneForecast.getPressure()+"");
+            mainForecast.setDescription(oneForecast.getWeather().get(0).getDescription());
             mainForecast.save();
         }
     }
@@ -79,7 +80,7 @@ public class ForecastService {
         c.setTime(date);
         int day = c.get(Calendar.DAY_OF_WEEK);
         DateFormatSymbols symbols = new DateFormatSymbols(new Locale("en"));
-        String[] dayNames = symbols.getShortWeekdays();
+        String[] dayNames = symbols.getWeekdays();
         return dayNames[day];
     }
 

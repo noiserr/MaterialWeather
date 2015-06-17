@@ -39,8 +39,7 @@ public class WeatherService {
                     EventBus.getDefault().post(new FindCityEvent(false, cityName, null));
                 } else {
                     EventBus.getDefault().post(new FindCityEvent(true, cityName, mainWeather));
-//                    ForecastService forecastService = new ForecastService();
-//                    forecastService.getForecast(mainWeather.getCityID());
+
                 }
             }
 
@@ -98,6 +97,9 @@ public class WeatherService {
         mainWeather.setDescription(weather.getWeather().get(0).getMain());
         mainWeather.setPressure(weather.getMain().getPressure() + " hPa");
         mainWeather.setCityID(weather.getId());
+        mainWeather.setLat(weather.getCoord().getLat());
+        mainWeather.setLon(weather.getCoord().getLon());
+        Log.d("TAGG", "lat: " + mainWeather.getLat() + ", lon: " + mainWeather.getLon());
         return mainWeather;
     }
 

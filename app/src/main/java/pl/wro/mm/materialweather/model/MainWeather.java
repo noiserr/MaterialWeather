@@ -23,6 +23,10 @@ public class MainWeather extends Model {
     int conditionID;
     @Column(name = "city_id")
     int cityID;
+    @Column(name = "lon")
+    double lon;
+    @Column(name = "lat")
+    double lat;
 
     public MainWeather( ) {
 
@@ -84,5 +88,21 @@ public class MainWeather extends Model {
 
     public void setCityID(int cityID) {
         this.cityID = cityID;
+    }
+
+    public double getLon() {
+        return lon;
+    }
+
+    public void setLon(double lon) {
+        this.lon = lon;
+    }
+
+    public double getLat() {
+        return lat;
+    }
+
+    public void setLat(double lat) {
+        this.lat = lat;
     }
 }

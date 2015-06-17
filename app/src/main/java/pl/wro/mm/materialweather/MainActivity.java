@@ -212,6 +212,8 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
         Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
         intent.putExtra("CITY_NAME", event.getCityName());
         intent.putExtra("CITY_ID", event.getCityId());
+        intent.putExtra("LAT", event.getLat());
+        intent.putExtra("LON", event.getLon());
         startActivity(intent);
 
     }
