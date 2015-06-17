@@ -47,8 +47,7 @@ public class PhotoService {
 //            public void failure(RetrofitError error) {
 //
 //            }
-//
-//        });
+// });
 
 
         service.findPhoto(lon - 0.1, lat - 0.1, lon + 0.1, lat + 0.1, new Callback<Photo>() {
@@ -57,7 +56,7 @@ public class PhotoService {
 
                 Log.d("TAGG", photo.getPhotos().get(3).getPhotoFileUrl());
                 Log.d("TAGG", response.getUrl());
-                EventBus.getDefault().post(new PhotoEvent(photo.getPhotos().get(0).getPhotoFileUrl()));
+                EventBus.getDefault().post(new PhotoEvent(photo.getPhotos().get(3).getPhotoFileUrl()));
 
             }
 
