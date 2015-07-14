@@ -1,6 +1,5 @@
 package pl.wro.mm.materialweather.adapter;
 
-import android.content.Intent;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -9,16 +8,16 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.squareup.picasso.Picasso;
+
 import java.util.List;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
-import pl.wro.mm.materialweather.DetailActivity;
 import pl.wro.mm.materialweather.R;
 import pl.wro.mm.materialweather.event.ShowDetailsEvent;
 import pl.wro.mm.materialweather.model.MainWeather;
-import pl.wro.mm.materialweather.service.ForecastService;
 
 /**
  * Created by noiser on 06.06.15.
@@ -84,6 +83,9 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
                 case 6:
                     imageResId = R.drawable.ic_weather_hail_grey600_48dp;
                     break;
+                case 7:
+                    imageResId = R.drawable.ic_weather_fog_grey600_48dp;
+                    break;
             }
         }
         return imageResId;
@@ -105,7 +107,6 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
     }
 
     public class WeatherViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-
         @InjectView(R.id.pressure)
         TextView pressure;
         @InjectView(R.id.temp_main)
@@ -121,12 +122,7 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
             super(itemView);
             ButterKnife.inject(this, itemView);
             itemView.setOnClickListener(this);
-
-
         }
-
-
-
 
         @Override
         public void onClick(View v) {

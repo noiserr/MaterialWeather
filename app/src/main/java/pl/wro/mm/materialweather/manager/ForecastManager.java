@@ -1,64 +1,59 @@
-package pl.wro.mm.materialweather.service;
+package pl.wro.mm.materialweather.manager;
 
 import android.util.Log;
 
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 
-import pl.wro.mm.materialweather.forecastGson.Forecast;
-import pl.wro.mm.materialweather.forecastGson.ForecastList;
+import pl.wro.mm.materialweather.network.data.photo.forecast.Forecast;
+import pl.wro.mm.materialweather.network.data.photo.forecast.ForecastList;
 import pl.wro.mm.materialweather.model.MainForecast;
 import retrofit.Callback;
+import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
 import retrofit.RetrofitError;
 import retrofit.client.Response;
 import retrofit.http.GET;
 import retrofit.http.Query;
+import rx.Observable;
+import rx.android.schedulers.AndroidSchedulers;
+import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
-/**
- * Created by noiser on 10.06.15.
- */
-public class ForecastService {
+public class ForecastManager {
     private ForecastServiceInterface service;
 
-    public ForecastService() {
+    public ForecastManager() {
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint("http://api.openweathermap.org")
+                .setRequestInterceptor(new RequestInterceptor() {
+                    @Override
+                    public void intercept(RequestFacade request) {
+                        request.addQueryParam("units", "metric");
+                        request.addQueryParam("cnt", "6");
+                    }
+                })
                 .build();
         service = restAdapter.create(ForecastServiceInterface.class);
-
-
     }
 
-    public void getForecast(int cityId) {
+    public Observable<Forecast> getForecast(int cityId) {
 
-        service.getForecast(cityId, new Callback<Forecast>() {
-            @Override
-            public void success(Forecast forecast, Response response) {
-                Log.d("TAGG", response.getUrl());
-                parseAndSaveForecast(forecast);
-
-            }
-
-
-            @Override
-            public void failure(RetrofitError error) {
-
-            }
-        });
-
+        return service.getForecast(cityId)
+                .subscribeOn(Schedulers.newThread())
+                .observeOn(AndroidSchedulers.mainThread());
     }
 
-    private void parseAndSaveForecast(Forecast forecast) {
-        java.util.List<ForecastList> forecastList = forecast.getList();
+    public void parseAndSaveForecast(Forecast forecast) {
+
+        List<ForecastList> forecastList = forecast.getList();
         for (ForecastList oneForecast : forecastList) {
-
             MainForecast mainForecast = new MainForecast();
             mainForecast.setCityName(forecast.getCity().getName());
             mainForecast.setCityId(forecast.getCity().getId());
-
             mainForecast.setDate(oneForecast.getDt());
             mainForecast.setConditionId(oneForecast.getWeather().get(0).getId());
             mainForecast.setDayTemperature(oneForecast.getTemp().getDay().intValue() + "");
@@ -86,10 +81,7 @@ public class ForecastService {
 
 
     public interface ForecastServiceInterface {
-
-        @GET("/data/2.5/forecast/daily?units=metric&mode=json&cnt=6")
-        void getForecast(@Query("id") int cityID, Callback<Forecast> cb);
-
-
+        @GET("/data/2.5/forecast/daily")
+        Observable<Forecast> getForecast(@Query("id") int cityID);
     }
 }

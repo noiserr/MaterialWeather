@@ -1,5 +1,5 @@
 
-package pl.wro.mm.materialweather.weatherGson;
+package pl.wro.mm.materialweather.network.data.photo.weather;
 
 import com.google.gson.annotations.Expose;
 

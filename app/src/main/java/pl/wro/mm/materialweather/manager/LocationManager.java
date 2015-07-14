@@ -1,30 +1,26 @@
-package pl.wro.mm.materialweather.service;
+package pl.wro.mm.materialweather.manager;
 
 import android.content.Context;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.util.Log;
-import android.widget.Toast;
-
-import pl.wro.mm.materialweather.MainActivity;
 
 /**
  * Created by noiser on 07.06.15.
  */
-public class LocationService implements LocationListener {
+public class LocationManager implements LocationListener {
 
     String privider;
     private boolean canGetLocation;
     Criteria criteria;
     Location location;
-    LocationManager locationManager;
+    android.location.LocationManager locationManager;
 
     Context context;
 
-    public LocationService(Context context) {
+    public LocationManager(Context context) {
         this.context = context;
     }
 
@@ -57,15 +53,15 @@ public class LocationService implements LocationListener {
 
     public Location getLocation() {
         try {
-            locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
+            locationManager = (android.location.LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
             // getting GPS status
             boolean isGPSEnabled = locationManager
-                    .isProviderEnabled(LocationManager.GPS_PROVIDER);
+                    .isProviderEnabled(android.location.LocationManager.GPS_PROVIDER);
 
             // getting network status
             boolean isNetworkEnabled = locationManager
-                    .isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+                    .isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER);
 
             if (!isGPSEnabled && !isNetworkEnabled) {
                 // no network provider is enabled
@@ -75,13 +71,13 @@ public class LocationService implements LocationListener {
                 double longitude;
                 if (isNetworkEnabled) {
                     locationManager.requestLocationUpdates(
-                            LocationManager.NETWORK_PROVIDER,
+                            android.location.LocationManager.NETWORK_PROVIDER,
                             100,
                             100f, this);
                     Log.d("LOCATION", "Network Enabled");
                     if (locationManager != null) {
                         location = locationManager
-                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                                .getLastKnownLocation(android.location.LocationManager.NETWORK_PROVIDER);
                         if (location != null) {
                             latitude = location.getLatitude();
                             longitude = location.getLongitude();
@@ -92,13 +88,13 @@ public class LocationService implements LocationListener {
                 if (isGPSEnabled) {
                     if (location == null) {
                         locationManager.requestLocationUpdates(
-                                LocationManager.GPS_PROVIDER,
+                                android.location.LocationManager.GPS_PROVIDER,
                                 100,
                                 100f, this);
                         Log.d("LOCATION", "GPS Enabled");
                         if (locationManager != null) {
                             location = locationManager
-                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                                    .getLastKnownLocation(android.location.LocationManager.GPS_PROVIDER);
                             if (location != null) {
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();

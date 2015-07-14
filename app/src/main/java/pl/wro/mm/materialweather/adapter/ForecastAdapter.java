@@ -4,6 +4,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -12,7 +13,6 @@ import java.util.List;
 import butterknife.ButterKnife;
 import butterknife.InjectView;
 import pl.wro.mm.materialweather.R;
-import pl.wro.mm.materialweather.forecastGson.Forecast;
 import pl.wro.mm.materialweather.model.MainForecast;
 
 /**
@@ -36,10 +36,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
     @Override
     public void onBindViewHolder(ForecastViewHolder holder, int position) {
         MainForecast forecast = forecastList.get(position);
-
         String desctiption = forecast.getDescription();
         desctiption = Character.toString(desctiption.charAt(0)).toUpperCase()+desctiption.substring(1);
-
         holder.forecastTitle.setText(forecast.getDayOfWeek());
         holder.forecastDescription.setText(desctiption);
         holder.dayTemp.setText("Day: " + forecast.getDayTemperature() + " °C");
@@ -48,6 +46,48 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         holder.windSpeed.setText("Wind speed: " + forecast.getWindSpeed() + "m/s");
         holder.presure.setText("Pressure: " + forecast.getPressure()+ " hPa");
         holder.humidity.setText("Humidity: " + forecast.getHumidity() + " %");
+        holder.icon.setImageResource(chooseIcon(forecast.getConditionId()));
+    }
+
+    private int chooseIcon(int conditionId) {
+        int imageResId = 0;
+        if (conditionId / 100 == 8) {
+            switch (conditionId) {
+                case 800:
+                    imageResId = R.drawable.ic_weather_sunny_grey600_48dp;
+                    break;
+                case 801:
+                    imageResId = R.drawable.ic_weather_partlycloudy_grey600_48dp;
+                    break;
+                case 802:
+                    imageResId = R.drawable.ic_weather_cloudy_grey600_48dp;
+                    break;
+                case 803:
+                case 804:
+                    imageResId = R.drawable.ic_weather_sunny_grey600_48dp;
+                    break;
+            }
+        } else {
+            conditionId = conditionId / 100;
+            switch (conditionId) {
+                case 2:
+                    imageResId = R.drawable.ic_weather_lightning_grey600_48dp;
+                    break;
+                case 3:
+                    imageResId = R.drawable.ic_weather_pouring_grey600_48dp;
+                    break;
+                case 5:
+                    imageResId = R.drawable.ic_weather_rainy_grey600_48dp;
+                    break;
+                case 6:
+                    imageResId = R.drawable.ic_weather_hail_grey600_48dp;
+                    break;
+                case 7:
+                    imageResId = R.drawable.ic_weather_fog_grey600_48dp;
+                    break;
+            }
+        }
+        return imageResId;
     }
 
     @Override
@@ -73,6 +113,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         TextView presure;
         @InjectView(R.id.forecast_humidity)
         TextView humidity;
+        @InjectView(R.id.forecast_icon)
+        ImageView icon;
 
 
 

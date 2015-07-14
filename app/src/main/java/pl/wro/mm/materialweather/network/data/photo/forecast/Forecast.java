@@ -1,5 +1,5 @@
 
-package pl.wro.mm.materialweather.forecastGson;
+package pl.wro.mm.materialweather.network.data.photo.forecast;
 
 import java.util.ArrayList;
 import com.google.gson.annotations.Expose;

@@ -1,6 +1,5 @@
 package pl.wro.mm.materialweather;
 
-import android.content.Intent;
 import android.support.design.widget.CollapsingToolbarLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -22,8 +21,7 @@ import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.adapter.ForecastAdapter;
 import pl.wro.mm.materialweather.event.PhotoEvent;
 import pl.wro.mm.materialweather.model.MainForecast;
-import pl.wro.mm.materialweather.model.MainWeather;
-import pl.wro.mm.materialweather.service.PhotoService;
+import pl.wro.mm.materialweather.manager.PhotoManager;
 
 public class DetailActivity extends AppCompatActivity {
     @InjectView(R.id.forecast_recyclerview)
@@ -53,13 +51,12 @@ public class DetailActivity extends AppCompatActivity {
         getExtra();
 
         List<MainForecast> forecastList = new Select().from(MainForecast.class).where("city_id=?", cityID + "").execute();
-        PhotoService photoService = new PhotoService();
-        photoService.findPhoto(lat, lon);
+        PhotoManager photoManager = new PhotoManager();
+        photoManager.findPhoto(lat, lon);
         Log.d("TAGG", "forecastList.size: "+ forecastList.size());
 
 
         collapsingToolbar.setTitle(cityName);
-
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -98,6 +95,7 @@ public class DetailActivity extends AppCompatActivity {
     }
 
     public void onEvent(PhotoEvent event) {
+        Log.wtf("XXX", event.getUrl());
         Picasso.with(this)
                 .load(event.getUrl())
                 .into(imageView);

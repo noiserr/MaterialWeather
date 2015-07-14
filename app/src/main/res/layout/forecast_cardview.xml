@@ -33,9 +33,7 @@
                 android:layout_width="60dp"
                 android:layout_height="60dp"
                 android:layout_centerHorizontal="true"
-                android:src="@drawable/ic_weather_sunny_grey600_48dp"
-
-                />
+                android:src="@drawable/ic_weather_sunny_grey600_48dp"/>
 
             <TextView
                 android:id="@+id/forecast_description"
@@ -45,8 +43,6 @@
                 android:layout_centerHorizontal="true"
                 android:text="Sunny"
                 android:textAppearance="@style/TextAppearance.AppCompat.Subhead" />
-
-
 
             <TextView
                 android:id="@+id/forecast_day_temp"

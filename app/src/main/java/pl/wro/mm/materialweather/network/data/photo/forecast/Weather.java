@@ -1,9 +1,9 @@
 
-package pl.wro.mm.materialweather.weatherGson;
+package pl.wro.mm.materialweather.network.data.photo.forecast;
 
 import com.google.gson.annotations.Expose;
 
-public class Weather_ {
+public class Weather {
 
     @Expose
     private Integer id;
