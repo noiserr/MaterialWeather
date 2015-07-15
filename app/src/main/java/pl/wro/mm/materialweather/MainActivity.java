@@ -45,7 +45,11 @@ import pl.wro.mm.materialweather.manager.LocationManager;
 import pl.wro.mm.materialweather.manager.WeatherManager;
 import pl.wro.mm.materialweather.network.data.photo.forecast.Forecast;
 import pl.wro.mm.materialweather.network.data.photo.weather.Weather;
+import rx.Observable;
+import rx.Scheduler;
+import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
+import rx.schedulers.Schedulers;
 
 
 public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOffsetChangedListener {
@@ -112,8 +116,12 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
             }
         });
         List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
-//
 
+    }
+
+    public Observable<List<MainWeather>> getRXList() {
+        List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
+        return Observable.just(mainWeatherList);
     }
 
 
@@ -230,12 +238,39 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
         showInputDialog(view);
     }
 
+    public Observable<Integer> doHeavyStuff() {
+        Observable observable = null;
+        progressBarGps.setVisibility(View.VISIBLE);
+        for (int i = 0; i < 1000000000; i++) {
+            long l = 999999999;
+            long k = 666666666;
+            long h = k * l;
+            l = h * l;
+        }
+        observable = Observable.just(new Integer(1));
+        return observable;
+
+    }
+
     private void showInputDialog(final View view) {
         LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
         promptView = layoutInflater.inflate(R.layout.findcity_dialog, null);
         findViewsForDialog(promptView);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
         alertDialogBuilder.setView(promptView);
+
+        Observable.just(doHeavyStuff())
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnNext(new Action1<Observable<Integer>>() {
+                    @Override
+                    public void call(Observable<Integer> integerObservable) {
+                    }
+                });
+
+        alert = alertDialogBuilder.create();
+        alert.show();
+
         findCityButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -280,13 +315,13 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
                 }
             }
         });
-        alert = alertDialogBuilder.create();
-        alert.show();
+//        alert = alertDialogBuilder.create();
+//        alert.show();
 
     }
 
     private void findForecastForCity(Weather weather) {
-        if (weather.getCod() != 404){
+        if (weather.getCod() != 404) {
             processWeather(weather);
             forecastManager.getForecast(weather.getId()).doOnNext(new Action1<Forecast>() {
                 @Override
@@ -294,7 +329,7 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
                     forecastManager.parseAndSaveForecast(forecast);
                 }
             }).subscribe();
-        }else {
+        } else {
             Toast.makeText(getApplicationContext(), "Can't find city", Toast.LENGTH_SHORT).show();
         }
     }

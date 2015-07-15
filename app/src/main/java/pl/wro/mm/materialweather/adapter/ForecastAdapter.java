@@ -20,6 +20,9 @@ import pl.wro.mm.materialweather.model.MainForecast;
  */
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ForecastViewHolder> {
 
+    public static final int TODAY = 0;
+    public static final int NOTTODAY = 1;
+
 
     List<MainForecast> forecastList = new ArrayList<>();
 
@@ -29,7 +32,12 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 
     @Override
     public ForecastViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview, parent, false);
+        View viewItem;
+        if (viewType == TODAY) {
+            viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview, parent, false);
+        }else {
+            viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview_other, parent, false);
+        }
         return new ForecastViewHolder(viewItem);
     }
 
@@ -88,6 +96,15 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
             }
         }
         return imageResId;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(position == 0){
+            return TODAY;
+        }else {
+            return NOTTODAY;
+        }
     }
 
     @Override

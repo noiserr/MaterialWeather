@@ -54,13 +54,11 @@ public class PhotoManager {
             @Override
             public void success(Photo photo, Response response) {
                 if (photo.getPhotos().size() != 0) {
-                    Log.d("TAGG", photo.getPhotos().get(3).getPhotoFileUrl());
+                    Log.d("TAGG", photo.getPhotos().get(0).getPhotoFileUrl());
                     Log.d("TAGG", response.getUrl());
-                    EventBus.getDefault().post(new PhotoEvent(photo.getPhotos().get(3).getPhotoFileUrl()));
+                    EventBus.getDefault().post(new PhotoEvent(photo.getPhotos().get(0).getPhotoFileUrl()));
                 }
-
             }
-
             @Override
             public void failure(RetrofitError error) {
                 Log.d("TAGG", error.getMessage());
@@ -70,13 +68,7 @@ public class PhotoManager {
 
 
     }
-
-
     public interface PhotoInterface {
-//        @GET("/?method=flickr.photos.getRecent&api_key="+ "178bdd836bb0f50cc05de0acbd5f918e" +"&format=json" +
-//                "&nojsoncallback=1&safe_search=1&per_page=1&page=1&sort=interestingness-desc")
-//        void findPhoto(@Query("text") String text, Callback<Photo> cb);
-
         @GET("/get_panoramas.php?set=public&from=0&to=20&size=original&mapfilter=true")
         void findPhoto(@Query("minx") double minLon, @Query("miny") double minLat,
                        @Query("maxx") double maxLon, @Query("maxy") double maxLat,

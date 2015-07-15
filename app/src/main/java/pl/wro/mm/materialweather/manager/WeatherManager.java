@@ -39,6 +39,7 @@ public class WeatherManager {
     public Observable<Weather> findCity(String q) {
         return service.findCity(q)
                 .subscribeOn(Schedulers.newThread())
+
                 .observeOn(AndroidSchedulers.mainThread());
     }
 
