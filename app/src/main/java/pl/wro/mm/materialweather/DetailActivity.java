@@ -6,31 +6,32 @@ import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import com.activeandroid.query.Select;
-import com.squareup.picasso.Picasso;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.adapter.ForecastAdapter;
 import pl.wro.mm.materialweather.event.PhotoEvent;
+import pl.wro.mm.materialweather.manager.ForecastManager;
 import pl.wro.mm.materialweather.model.MainForecast;
-import pl.wro.mm.materialweather.manager.PhotoManager;
+import pl.wro.mm.materialweather.network.data.s.forecast.Forecast;
+import rx.functions.Action1;
 
 public class DetailActivity extends AppCompatActivity {
-    @InjectView(R.id.forecast_recyclerview)
-    RecyclerView recyclerView;
-    @InjectView(R.id.backdrop)
-    ImageView imageView;
-    @InjectView(R.id.collapsing_toolbar)
+    @SuppressWarnings("WeakerAccess")
+    @Bind(R.id.forecast_recyclerview) RecyclerView recyclerView;
+
+    @Bind(R.id.collapsing_toolbar)
     CollapsingToolbarLayout collapsingToolbar;
-    @InjectView(R.id.detail_toolbar)
+    @Bind(R.id.detail_toolbar)
     Toolbar toolbar;
     ForecastAdapter forecastAdapter;
 
@@ -44,41 +45,36 @@ public class DetailActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
-        ButterKnife.inject(this);
-        EventBus.getDefault().register(this);
+        ButterKnife.bind(this);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getExtra();
 
         List<MainForecast> forecastList = new Select().from(MainForecast.class).where("city_id=?", cityID + "").execute();
-        PhotoManager photoManager = new PhotoManager();
-        photoManager.findPhoto(lat, lon);
-        Log.d("TAGG", "forecastList.size: "+ forecastList.size());
+        if(forecastList.isEmpty()) {
+            final ForecastManager forecastManager = new ForecastManager();
+            forecastManager.getForecast(Integer.valueOf(cityID)).doOnNext(new Action1<Forecast>() {
+                @Override
+                public void call(Forecast forecast) {
 
+                    Toast.makeText(getApplicationContext(), "IN RX", Toast.LENGTH_SHORT).show();
 
-        collapsingToolbar.setTitle(cityName);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        recyclerView.setLayoutManager(linearLayoutManager);
-        ForecastAdapter forecastAdapter = new ForecastAdapter(forecastList);
-        recyclerView.setAdapter(forecastAdapter);
+                    forecastManager.parseAndSaveForecast(forecast);
+                    List<MainForecast> forecastList = new Select().from(MainForecast.class).where("city_id=?", cityID + "").execute();
+                    setUpRecyclerView(forecastList);
 
+                }
+            }).doOnError(new Action1<Throwable>() {
+                @Override
+                public void call(Throwable throwable) {
+                    Toast.makeText(getApplicationContext(), "ERROR", Toast.LENGTH_SHORT).show();
 
-    }
+                }
+            }).subscribe();
+        }else{
+            setUpRecyclerView(forecastList);
+        }
 
-    public void getExtra() {
-        Bundle bundle= getIntent().getExtras();
-        cityName = bundle.getString("CITY_NAME");
-        cityID = bundle.getString("CITY_ID");
-        lon = bundle.getDouble("LON");
-        lat = bundle.getDouble("LAT");
-    }
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_detail, menu);
-        return true;
     }
 
     @Override
@@ -94,10 +90,21 @@ public class DetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    public void onEvent(PhotoEvent event) {
-        Log.wtf("XXX", event.getUrl());
-        Picasso.with(this)
-                .load(event.getUrl())
-                .into(imageView);
+    private void setUpRecyclerView(List<MainForecast> forecastList) {
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        ForecastAdapter forecastAdapter = new ForecastAdapter(forecastList);
+        recyclerView.setAdapter(forecastAdapter);
     }
+
+    public void getExtra() {
+        Bundle bundle= getIntent().getExtras();
+        cityName = bundle.getString("CITY_NAME");
+        cityID = bundle.getString("CITY_ID");
+        lon = bundle.getDouble("LON");
+        lat = bundle.getDouble("LAT");
+    }
+
+
 }

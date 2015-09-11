@@ -86,7 +86,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:src="@drawable/ic_crosshairs_gps_white_48dp"
-            android:onClick="findCityGPS"
             android:layout_gravity="center"
             android:clickable="false"
             app:borderWidth="0dp"

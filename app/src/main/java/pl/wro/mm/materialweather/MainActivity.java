@@ -1,29 +1,23 @@
 package pl.wro.mm.materialweather;
 
+import android.content.Context;
 import android.content.Intent;
-import android.location.Location;
+import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.AppBarLayout;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
-import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.activeandroid.query.Delete;
@@ -32,73 +26,61 @@ import com.activeandroid.query.Select;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+import butterknife.OnClick;
 import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.adapter.WeatherAdapter;
-import pl.wro.mm.materialweather.event.FindCityEvent;
 import pl.wro.mm.materialweather.event.ShowDetailsEvent;
-import pl.wro.mm.materialweather.model.MainForecast;
-import pl.wro.mm.materialweather.model.MainWeather;
 import pl.wro.mm.materialweather.manager.ForecastManager;
 import pl.wro.mm.materialweather.manager.LocationManager;
 import pl.wro.mm.materialweather.manager.WeatherManager;
-import pl.wro.mm.materialweather.network.data.photo.forecast.Forecast;
-import pl.wro.mm.materialweather.network.data.photo.weather.Weather;
+import pl.wro.mm.materialweather.model.MainForecast;
+import pl.wro.mm.materialweather.model.MainWeather;
+import pl.wro.mm.materialweather.network.data.s.forecast.Forecast;
+import pl.wro.mm.materialweather.network.data.s.weather.Weather;
+import pl.wro.mm.materialweather.presenter.MainPresenter;
 import rx.Observable;
-import rx.Scheduler;
-import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Action1;
-import rx.schedulers.Schedulers;
 
 
-public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOffsetChangedListener {
-    @InjectView(R.id.drawer_layout)
+public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOffsetChangedListener, MainView {
+    @Bind(R.id.drawer_layout)
     DrawerLayout mDrawerLayout;
-    @InjectView(R.id.cities_list)
+    @Bind(R.id.cities_list)
     RecyclerView recyclerView;
-    @InjectView(R.id.activity_main_swipe_refresh_layout)
+    @Bind(R.id.activity_main_swipe_refresh_layout)
     SwipeRefreshLayout swipeRefreshLayout;
-    @InjectView(R.id.appbar)
+    @Bind(R.id.appbar)
     AppBarLayout appBarLayout;
-    @InjectView(R.id.toolbar)
+    @Bind(R.id.toolbar)
     Toolbar toolbar;
     View promptView;
-    FloatingActionButton findCityButton;
-    ProgressBar progressBarSearch;
-    FloatingActionButton findCityGPSButton;
-    ProgressBar progressBarGps;
+
     ActionBar actionBar;
 
-    List<MainWeather> weatherList = new ArrayList<>();
-    WeatherManager weatherManager;
-    WeatherAdapter weatherAdapter;
-    ForecastManager forecastManager = new ForecastManager();
-    AlertDialog alert;
     SwipeableRecyclerViewTouchListener swipeTouchListener;
-    LocationManager locationManager = new LocationManager(this);
-    EditText findCityET;
+    MainPresenter mainPresenter;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.inject(this);
+        ButterKnife.bind(this);
         EventBus.getDefault().register(this);
         setSupportActionBar(toolbar);
 
         actionBar = getSupportActionBar();
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu);
         actionBar.setDisplayHomeAsUpEnabled(true);
-
+        mainPresenter = new MainPresenter(this, this);
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         if (navigationView != null) {
             setupDrawerContent(navigationView);
         }
-        setupRecyclerview();
+//        setupRecyclerview();
         setupSwipeableTouchListener();
-        weatherManager = new WeatherManager();
         recyclerView.addOnItemTouchListener(swipeTouchListener);
         swipeRefreshLayout.setColorSchemeColors(R.attr.colorAccent, R.attr.colorPrimary);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -115,7 +97,7 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
                 }, 4000);
             }
         });
-        List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
+//        List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
 
     }
 
@@ -129,11 +111,9 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
     protected void onResume() {
         super.onResume();
         appBarLayout.addOnOffsetChangedListener(this);
-        if (weatherList.isEmpty()) {
-            List<MainWeather> mainWeatherList = new Select().from(MainWeather.class).execute();
-            weatherList.addAll(mainWeatherList);
-            weatherAdapter.notifyDataSetChanged();
-        }
+        setupRecyclerview();
+        mainPresenter.onResume();
+//
     }
 
     @Override
@@ -142,12 +122,19 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
         appBarLayout.removeOnOffsetChangedListener(this);
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
+        ButterKnife.unbind(this);
+    }
+
     private void setupRecyclerview() {
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
         linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
         recyclerView.setLayoutManager(linearLayoutManager);
-        weatherAdapter = new WeatherAdapter(weatherList);
-        recyclerView.setAdapter(weatherAdapter);
+//        weatherAdapter = new WeatherAdapter(weatherList);
+//
     }
 
     private void setupDrawerContent(NavigationView navigationView) {
@@ -162,47 +149,7 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
                 });
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case android.R.id.home:
-                mDrawerLayout.openDrawer(GravityCompat.START);
-                return true;
-            case R.id.nav_friends:
-                Log.d("TAG", "friends clicked");
-                return true;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
-
-    public void onEvent(FindCityEvent event) {
-        progressBarSearch.setVisibility(View.GONE);
-        progressBarGps.setVisibility(View.GONE);
-        findCityButton.setEnabled(true);
-        findCityGPSButton.setEnabled(true);
-        if (event.isFound) {
-            if (weatherAdapter.isOnCityList(event.weather.getCityName())) {
-                Toast.makeText(getApplicationContext(), "City already on list", Toast.LENGTH_SHORT).show();
-
-            } else {
-                ForecastManager forecastManager = new ForecastManager();
-                forecastManager.getForecast(event.weather.getCityID());
-                alert.dismiss();
-                weatherList.add(event.weather);
-                event.weather.save();
-                recyclerView.smoothScrollToPosition(weatherList.size() - 1);
-                weatherAdapter.notifyItemInserted(weatherList.size() - 1);
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "Can't find city", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     public void onEvent(ShowDetailsEvent event) {
         Intent intent = new Intent(getApplicationContext(), DetailActivity.class);
@@ -214,186 +161,13 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
 
     }
 
-    private void removeCity(final int position) {
-        final MainWeather weather = weatherAdapter.weatherList.get(position);
-        final MainWeather copy = new MainWeather(weather);
-        String information;
-        weatherAdapter.weatherList.remove(position);
-        weatherAdapter.notifyDataSetChanged();
-        information = weather.getCityName();
-        weather.delete();
 
-        Snackbar.make(recyclerView, information + " removed", Snackbar.LENGTH_LONG)
-                .setAction("UNDO", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        copy.save();
-                        weatherAdapter.weatherList.add(position, copy);
-                        weatherAdapter.notifyItemInserted(position);
-                    }
-                }).show();
-    }
 
+    @OnClick(R.id.fab)
     public void addCity(View view) {
-        showInputDialog(view);
-    }
-
-    public Observable<Integer> doHeavyStuff() {
-        Observable observable = null;
-        progressBarGps.setVisibility(View.VISIBLE);
-        for (int i = 0; i < 1000000000; i++) {
-            long l = 999999999;
-            long k = 666666666;
-            long h = k * l;
-            l = h * l;
-        }
-        observable = Observable.just(new Integer(1));
-        return observable;
-
-    }
-
-    private void showInputDialog(final View view) {
-        LayoutInflater layoutInflater = LayoutInflater.from(MainActivity.this);
-        promptView = layoutInflater.inflate(R.layout.findcity_dialog, null);
-        findViewsForDialog(promptView);
+        View promptView = getLayoutInflater().inflate(R.layout.findcity_dialog, null);
         AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(MainActivity.this);
-        alertDialogBuilder.setView(promptView);
-
-        Observable.just(doHeavyStuff())
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnNext(new Action1<Observable<Integer>>() {
-                    @Override
-                    public void call(Observable<Integer> integerObservable) {
-                    }
-                });
-
-        alert = alertDialogBuilder.create();
-        alert.show();
-
-        findCityButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (isTextViewNotEmpty()) {
-                    showProgressBar(progressBarSearch);
-                    weatherManager.findCity(findCityET.getText() + "")
-                            .doOnNext(new Action1<Weather>() {
-                                @Override
-                                public void call(Weather weather) {
-                                    hideProgressBar();
-                                    findForecastForCity(weather);
-                                }
-                            })
-                            .subscribe();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Type city name", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-
-        findCityGPSButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Location location = locationManager.getLocation();
-                showProgressBar(progressBarGps);
-                if (location != null) {
-                    weatherManager.findCityGPS(location.getLatitude(), location.getLongitude()).doOnNext(new Action1<Weather>() {
-                        @Override
-                        public void call(Weather weather) {
-                            hideProgressBar();
-                            processWeather(weather);
-                            forecastManager.getForecast(weather.getId()).doOnNext(new Action1<Forecast>() {
-                                @Override
-                                public void call(Forecast forecast) {
-                                    forecastManager.parseAndSaveForecast(forecast);
-                                }
-                            }).subscribe();
-                        }
-                    }).subscribe();
-                } else {
-                    Toast.makeText(getApplicationContext(), "Can't get position! Is GPS on?", Toast.LENGTH_SHORT).show();
-                }
-            }
-        });
-//        alert = alertDialogBuilder.create();
-//        alert.show();
-
-    }
-
-    private void findForecastForCity(Weather weather) {
-        if (weather.getCod() != 404) {
-            processWeather(weather);
-            forecastManager.getForecast(weather.getId()).doOnNext(new Action1<Forecast>() {
-                @Override
-                public void call(Forecast forecast) {
-                    forecastManager.parseAndSaveForecast(forecast);
-                }
-            }).subscribe();
-        } else {
-            Toast.makeText(getApplicationContext(), "Can't find city", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void findViewsForDialog(View promptView) {
-        findCityET = (EditText) promptView.findViewById(R.id.city_name_edit_text);
-        findCityButton = (FloatingActionButton) promptView.findViewById(R.id.find_city_fab);
-        findCityGPSButton = (FloatingActionButton) promptView.findViewById(R.id.gps_city_fab);
-        progressBarGps = (ProgressBar) promptView.findViewById(R.id.progressBar_gps);
-        progressBarSearch = (ProgressBar) promptView.findViewById(R.id.progressBar_search);
-    }
-
-    private boolean isTextViewNotEmpty() {
-        return !findCityET.getText().toString().equals("");
-    }
-
-    private void processWeather(Weather weather) {
-        MainWeather mainWeather = parseWeather(weather);
-        if (weather.getCod() != 404) {
-            if (weatherAdapter.isOnCityList(mainWeather.getCityName())) {
-                Toast.makeText(getApplicationContext(), "City already on list", Toast.LENGTH_SHORT).show();
-            } else {
-                ForecastManager forecastManager = new ForecastManager();
-                forecastManager.getForecast(mainWeather.getCityID());
-                alert.dismiss();
-                weatherList.add(mainWeather);
-                mainWeather.save();
-                recyclerView.smoothScrollToPosition(weatherList.size() - 1);
-                weatherAdapter.notifyItemInserted(weatherList.size() - 1);
-            }
-        } else {
-            Toast.makeText(getApplicationContext(), "Can't find city", Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    private void hideProgressBar() {
-        progressBarSearch.setVisibility(View.GONE);
-        progressBarGps.setVisibility(View.GONE);
-        findCityButton.setEnabled(true);
-        findCityGPSButton.setEnabled(true);
-    }
-
-    public void showProgressBar(ProgressBar progressBar) {
-        findCityButton.setEnabled(false);
-        findCityGPSButton.setEnabled(false);
-        progressBar.setVisibility(View.VISIBLE);
-    }
-
-
-    public void findCityGPS(View view) {
-    }
-
-    MainWeather parseWeather(Weather weather) {
-        MainWeather mainWeather = new MainWeather();
-        mainWeather.setCityName(weather.getName());
-        mainWeather.setTemp(weather.getMain().getTemp().intValue() + " °C");
-        mainWeather.setConditionID(weather.getWeather().get(0).getId());
-        mainWeather.setDescription(weather.getWeather().get(0).getMain());
-        mainWeather.setPressure(weather.getMain().getPressure() + " hPa");
-        mainWeather.setCityID(weather.getId());
-        mainWeather.setLat(weather.getCoord().getLat());
-        mainWeather.setLon(weather.getCoord().getLon());
-        Log.d("TAGG", "lat: " + mainWeather.getLat() + ", lon: " + mainWeather.getLon());
-        return mainWeather;
+        mainPresenter.showDialog(promptView, alertDialogBuilder);
     }
 
 
@@ -419,17 +193,43 @@ public class MainActivity extends AppCompatActivity implements AppBarLayout.OnOf
                     @Override
                     public void onDismissedBySwipeLeft(RecyclerView recyclerView, int[] reverseSortedPositions) {
                         for (final int position : reverseSortedPositions) {
-                            removeCity(position);
+                            mainPresenter.removeCity(position, recyclerView);
                         }
                     }
 
                     @Override
                     public void onDismissedBySwipeRight(RecyclerView recyclerView, int[] reverseSortedPositions) {
                         for (final int position : reverseSortedPositions) {
-                            removeCity(position);
+                            mainPresenter.removeCity(position, recyclerView);
                         }
                     }
                 });
 
+    }
+
+    @Override
+    public void showSearchDialog(AlertDialog dialog) {
+        dialog.show();
+
+    }
+
+    @Override
+    public void hideSearchDialog(AlertDialog dialog) {
+        dialog.dismiss();
+    }
+
+    @Override
+    public void showToastWithInfo(String info) {
+        Toast.makeText(getApplicationContext(), info, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void showSnackBar(Snackbar snackbar) {
+        snackbar.show();
+    }
+
+    @Override
+    public void addAdapterToRecyclerView(WeatherAdapter weatherAdapter) {
+        recyclerView.setAdapter(weatherAdapter);
     }
 }

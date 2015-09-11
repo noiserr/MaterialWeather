@@ -10,8 +10,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
 import pl.wro.mm.materialweather.R;
 import pl.wro.mm.materialweather.model.MainForecast;
 
@@ -20,11 +20,7 @@ import pl.wro.mm.materialweather.model.MainForecast;
  */
 public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.ForecastViewHolder> {
 
-    public static final int TODAY = 0;
-    public static final int NOTTODAY = 1;
-
-
-    List<MainForecast> forecastList = new ArrayList<>();
+    private List<MainForecast> forecastList = new ArrayList<>();
 
     public ForecastAdapter(List<MainForecast> forecastList) {
         this.forecastList = forecastList;
@@ -32,12 +28,8 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
 
     @Override
     public ForecastViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View viewItem;
-        if (viewType == TODAY) {
-            viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview, parent, false);
-        }else {
-            viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview_other, parent, false);
-        }
+        View viewItem = LayoutInflater.from(parent.getContext()).inflate(R.layout.forecast_cardview, parent, false);
+
         return new ForecastViewHolder(viewItem);
     }
 
@@ -52,7 +44,7 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
         holder.nightTemp.setText("Night: " + forecast.getNightTemperature() + " °C");
         holder.cloudiness.setText("Cloudines: " + forecast.getCludiness()+ " %");
         holder.windSpeed.setText("Wind speed: " + forecast.getWindSpeed() + "m/s");
-        holder.presure.setText("Pressure: " + forecast.getPressure()+ " hPa");
+        holder.pressure.setText("Pressure: " + forecast.getPressure() + " hPa");
         holder.humidity.setText("Humidity: " + forecast.getHumidity() + " %");
         holder.icon.setImageResource(chooseIcon(forecast.getConditionId()));
     }
@@ -99,45 +91,34 @@ public class ForecastAdapter extends RecyclerView.Adapter<ForecastAdapter.Foreca
     }
 
     @Override
-    public int getItemViewType(int position) {
-        if(position == 0){
-            return TODAY;
-        }else {
-            return NOTTODAY;
-        }
-    }
-
-    @Override
     public int getItemCount() {
         return forecastList.size();
     }
 
     class ForecastViewHolder extends RecyclerView.ViewHolder {
 
-        @InjectView(R.id.forecast_title)
+        @Bind(R.id.forecast_title)
         TextView forecastTitle;
-        @InjectView(R.id.forecast_description)
+        @Bind(R.id.forecast_description)
         TextView forecastDescription;
-        @InjectView(R.id.forecast_day_temp)
+        @Bind(R.id.forecast_day_temp)
         TextView dayTemp;
-        @InjectView(R.id.forecast_night_temp)
+        @Bind(R.id.forecast_night_temp)
         TextView nightTemp;
-        @InjectView(R.id.forecast_cloudiness)
+        @Bind(R.id.forecast_cloudiness)
         TextView cloudiness;
-        @InjectView(R.id.forecast_windspeed)
+        @Bind(R.id.forecast_windspeed)
         TextView windSpeed;
-        @InjectView(R.id.forecast_pressure)
-        TextView presure;
-        @InjectView(R.id.forecast_humidity)
+        @Bind(R.id.forecast_pressure)
+        TextView pressure;
+        @Bind(R.id.forecast_humidity)
         TextView humidity;
-        @InjectView(R.id.forecast_icon)
+        @Bind(R.id.forecast_icon)
         ImageView icon;
-
-
 
         public ForecastViewHolder(View itemView) {
             super(itemView);
-            ButterKnife.inject(this, itemView);
+            ButterKnife.bind(this, itemView);
         }
     }
 }

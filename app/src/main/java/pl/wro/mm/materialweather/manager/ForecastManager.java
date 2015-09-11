@@ -1,34 +1,29 @@
 package pl.wro.mm.materialweather.manager;
 
-import android.util.Log;
-
 import java.text.DateFormatSymbols;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import pl.wro.mm.materialweather.network.data.photo.forecast.Forecast;
-import pl.wro.mm.materialweather.network.data.photo.forecast.ForecastList;
+import pl.wro.mm.materialweather.network.data.s.forecast.Forecast;
+import pl.wro.mm.materialweather.network.data.s.forecast.ForecastList;
 import pl.wro.mm.materialweather.model.MainForecast;
-import retrofit.Callback;
 import retrofit.RequestInterceptor;
 import retrofit.RestAdapter;
-import retrofit.RetrofitError;
-import retrofit.client.Response;
 import retrofit.http.GET;
 import retrofit.http.Query;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Action1;
 import rx.schedulers.Schedulers;
 
 public class ForecastManager {
-    private ForecastServiceInterface service;
+    private final ForecastServiceInterface service;
 
     public ForecastManager() {
         RestAdapter restAdapter = new RestAdapter.Builder()
                 .setEndpoint("http://api.openweathermap.org")
+                .setLogLevel(RestAdapter.LogLevel.BASIC)
                 .setRequestInterceptor(new RequestInterceptor() {
                     @Override
                     public void intercept(RequestFacade request) {

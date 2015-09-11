@@ -5,7 +5,7 @@ package pl.wro.mm.materialweather.event;
  */
 public class PhotoEvent {
 
-    String url;
+    final String url;
 
     public PhotoEvent(String url) {
         this.url = url;

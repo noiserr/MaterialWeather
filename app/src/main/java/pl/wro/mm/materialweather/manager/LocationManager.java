@@ -18,7 +18,7 @@ public class LocationManager implements LocationListener {
     Location location;
     android.location.LocationManager locationManager;
 
-    Context context;
+    final Context context;
 
     public LocationManager(Context context) {
         this.context = context;

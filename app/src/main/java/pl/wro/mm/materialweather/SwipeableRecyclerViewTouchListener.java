@@ -373,6 +373,7 @@ public class SwipeableRecyclerViewTouchListener implements RecyclerView.OnItemTo
         /**
          * Called to determine whether the given position can be swiped.
          */
+        @SuppressWarnings("SameReturnValue")
         boolean canSwipe(int position);
 
         /**

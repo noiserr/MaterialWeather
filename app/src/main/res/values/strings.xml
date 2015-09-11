@@ -4,4 +4,10 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_detail">DetailActivity</string>
+    <string name="city_already_on_list">City already on list</string>
+    <string name="cant_find_city">Can\'t find city</string>
+    <string name="cant_get_gps">Can\'t get position! Is GPS on?</string>
+    <string name="city_removed">" removed"</string>
+    <string name="undo">UNDO</string>
+    <string name="type_city_name">Type city name</string>
 </resources>

@@ -7,8 +7,8 @@ import pl.wro.mm.materialweather.model.MainWeather;
  */
 public class FindCityEvent {
     public boolean isFound  =false;
-    public String cityName;
-    public MainWeather weather;
+    public final String cityName;
+    public final MainWeather weather;
 
 
     public FindCityEvent(boolean isFound, String cityName, MainWeather weather) {

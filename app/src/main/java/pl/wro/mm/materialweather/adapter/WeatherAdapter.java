@@ -12,8 +12,9 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+import butterknife.Bind;
 import butterknife.ButterKnife;
-import butterknife.InjectView;
+
 import de.greenrobot.event.EventBus;
 import pl.wro.mm.materialweather.R;
 import pl.wro.mm.materialweather.event.ShowDetailsEvent;
@@ -107,20 +108,20 @@ public class WeatherAdapter extends RecyclerView.Adapter<WeatherAdapter.WeatherV
     }
 
     public class WeatherViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener{
-        @InjectView(R.id.pressure)
+        @Bind(R.id.pressure)
         TextView pressure;
-        @InjectView(R.id.temp_main)
+        @Bind(R.id.temp_main)
         TextView currentTemperature;
-        @InjectView(R.id.city_name)
+        @Bind(R.id.city_name)
         TextView cityName;
-        @InjectView(R.id.weather_description)
+        @Bind(R.id.weather_description)
         TextView description;
-        @InjectView(R.id.weather_icon)
+        @Bind(R.id.weather_icon)
         ImageView weatherIcon;
 
         public WeatherViewHolder(View itemView) {
             super(itemView);
-            ButterKnife.inject(this, itemView);
+            ButterKnife.bind(this, itemView);
             itemView.setOnClickListener(this);
         }
 
